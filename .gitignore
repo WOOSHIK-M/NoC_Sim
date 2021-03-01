@@ -1,0 +1,19 @@
+# 이것은 코멘트
+# 파일이름을 넣으면 모든 디렉토리에서 해당 파일 무시
+ignore-file.txt
+
+# /로 끝나면 해당 디렉토리 전체를 무시
+ref/
+.vscode/
+obj/
+data/
+
+*.o
+
+Run
+
+# 와일드카드도 사용가능
+# ignore-file*
+# *.log
+# Auto detect text files and perform LF normalization
+* text=auto
