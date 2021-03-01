@@ -23,16 +23,25 @@ Network::Network(Configuration const * config, vector<vector<int>> & LUT)
     X_DIM = config->GetInt("X_DIM");
     Y_DIM = config->GetInt("Y_DIM");
     _buff_size = config->GetInt("buff_size");
+    _chip_buff_size = config->GetInt("chip_buff_size");
+
+    _interchip_latency = config->GetInt("interchip_latency");
 
     _vir_chan = config->GetInt("vir_chan");
     _interval = config->GetInt("interval");
 
     _nodes = x_dim * y_dim * X_DIM * Y_DIM;
+    _nodesPerChip = x_dim * y_dim;
     
     // Allocate Initial Mapping Function
     FindIndexMap.resize(y_dim * Y_DIM);
     for (int i=0;i<y_dim * Y_DIM;i++) {
         FindIndexMap[i].resize(x_dim * X_DIM);
+    }
+
+    ChipFindIndexMap.resize(Y_DIM);
+    for (int i=0;i<Y_DIM;i++) {
+        ChipFindIndexMap[i].resize(X_DIM);
     }
 
     _parseip = config->GetStr("init_place");
@@ -42,16 +51,14 @@ Network::Network(Configuration const * config, vector<vector<int>> & LUT)
         exit(-1);
     }
     ip = ip_iter->second;
-    ip(phy_x, phy_y, _nodes, x_dim, y_dim, X_DIM, Y_DIM, FindIndexMap);
-    
-    // for (int i=0; i<(int)phy_x.size(); i++){
-    //     cerr << phy_x[i] << " ";
+    ip(phy_x, phy_y, phy_x_chip, phy_y_chip, _nodes, _nodesPerChip, x_dim, y_dim, X_DIM, Y_DIM, FindIndexMap, ChipFindIndexMap);
+
+    // for (int j=0; j<y_dim*Y_DIM;j++){
+    //     for (int i=0; i<x_dim*X_DIM; i++ ) {
+    //         cerr << FindIndexMap[j][i] << " ";
+    //     }
+    //     cerr << endl;
     // }
-    // cerr << endl;
-    // for (int i=0; i<(int)phy_x.size(); i++){
-    //     cerr << phy_y[i] << " ";
-    // }
-    // cerr << endl;
     // exit(-1);
 
     // Allocate topology
@@ -65,7 +72,7 @@ Network::Network(Configuration const * config, vector<vector<int>> & LUT)
         
         if ( _routers[i]->IsActive() ) {
 
-            printf("ROUTER NUM: %i, PACKETNUM: %i\n", i, _routers[i]->GetInjectNum());
+            // printf("ROUTER NUM: %i, PACKETNUM: %i\n", i, _routers[i]->GetInjectNum());
 
             _all_packets += _routers[i]->GetInjectNum();
         }
@@ -102,7 +109,7 @@ void Network::CoutState()
 }
 
 
-bool Network::Virtual_Channle_Control(Router * router, Packet * pack)
+bool Network::Virtual_Channel_Control(Router * router, Packet * pack)
 {
     bool Able = false;
 
@@ -214,7 +221,7 @@ bool Network::Step(Router * router, bool is_use, int curbuffpos, int curpid, int
 
     Router * ntrouter;
 
-    if (dir == 0) {
+    if (dir == 0) {                                 // GO LOCAL IN
         int BuffState = -1;
 
         ntrid = FindIndexMap[src_y][src_x];
@@ -229,7 +236,7 @@ bool Network::Step(Router * router, bool is_use, int curbuffpos, int curpid, int
             Packet * pack = router->RemovePacket(curbuffpos, curpid);
             ntrouter->AddPacket(pack, ntbuffpos);
         }
-    } else if (dir == 1 && !is_use) {
+    } else if (dir == 1 && !is_use) {               // GO LEFT (CORE TO CORE)
         bool BuffState = true;
 
         ntrid = FindIndexMap[src_y][src_x - 1];
@@ -244,7 +251,7 @@ bool Network::Step(Router * router, bool is_use, int curbuffpos, int curpid, int
             Packet * pack = router->RemovePacket(curbuffpos, curpid);
             ntrouter->AddPacket(pack, ntbuffpos);
         }
-    } else if (dir == 2 && !is_use) {
+    } else if (dir == 2 && !is_use) {               // GO RIGHT (CORE TO CORE)   
         bool BuffState = true;
 
         ntrid = FindIndexMap[src_y][src_x + 1];
@@ -259,7 +266,7 @@ bool Network::Step(Router * router, bool is_use, int curbuffpos, int curpid, int
             Packet * pack = router->RemovePacket(curbuffpos, curpid);
             ntrouter->AddPacket(pack, ntbuffpos);
         }
-    } else if (dir == 3 && !is_use) {
+    } else if (dir == 3 && !is_use) {               // GO UP (CORE TO CORE)
         bool BuffState = true;
 
         ntrid = FindIndexMap[src_y - 1][src_x];
@@ -274,7 +281,7 @@ bool Network::Step(Router * router, bool is_use, int curbuffpos, int curpid, int
             Packet * pack = router->RemovePacket(curbuffpos, curpid);
             ntrouter->AddPacket(pack, ntbuffpos);
         }
-    } else if (dir == 4 && !is_use) {
+    } else if (dir == 4 && !is_use) {               // GO DOWN (CORE TO CORE)
         bool BuffState = true;
 
         ntrid = FindIndexMap[src_y + 1][src_x];
@@ -362,8 +369,8 @@ void Network::Simulate()
                 int dst_x = phy_x[dst];
                 int dst_y = phy_y[dst];
             
-                Packet * pack = new Packet(false, dst_x, dst_y);
-                bool _vir_able = Virtual_Channle_Control(router, pack);
+                Packet * pack = new Packet(false, dst_x, dst_y, 0, 0);          // FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                bool _vir_able = Virtual_Channel_Control(router, pack);
 
                 if ( _vir_able ) {
                     busy = true;
@@ -387,7 +394,7 @@ void Network::Simulate()
                 for ( int pid=0; pid<router->GetNum(leftpos); pid++ ) {
                     Packet * pack = router->GetPacketAddress(leftpos, pid);
                     if ( !pack->is_move ) {
-                        bool _vir_able = Virtual_Channle_Control(router, pack);
+                        bool _vir_able = Virtual_Channel_Control(router, pack);
 
                         if ( _vir_able ) {
                             busy = true;
@@ -415,7 +422,7 @@ void Network::Simulate()
                 for ( int pid=0; pid<router->GetNum(rightpos); pid++ ) {
                     Packet * pack = router->GetPacketAddress(rightpos, pid);
                     if ( !pack->is_move ) {
-                        bool _vir_able = Virtual_Channle_Control(router, pack);
+                        bool _vir_able = Virtual_Channel_Control(router, pack);
 
                         if ( _vir_able ) {
                             busy = true;
@@ -440,7 +447,7 @@ void Network::Simulate()
                 for ( int pid=0; pid<router->GetNum(uppos); pid++ ) {
                     Packet * pack = router->GetPacketAddress(uppos, pid);
                     if ( !pack->is_move ) {
-                        bool _vir_able = Virtual_Channle_Control(router, pack);
+                        bool _vir_able = Virtual_Channel_Control(router, pack);
 
                         if ( _vir_able ) {
                             busy = true;
@@ -465,7 +472,7 @@ void Network::Simulate()
                 for ( int pid=0; pid<router->GetNum(downpos); pid++ ) {
                     Packet * pack = router->GetPacketAddress(downpos, pid);
                     if ( !pack->is_move ) {
-                        bool _vir_able = Virtual_Channle_Control(router, pack);
+                        bool _vir_able = Virtual_Channel_Control(router, pack);
 
                         if ( _vir_able ) {
                             busy = true;

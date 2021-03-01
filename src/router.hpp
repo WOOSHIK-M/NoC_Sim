@@ -90,6 +90,19 @@ public:
     void PrintState();
 };
 
+
+class ChipRouter
+{
+private:
+    int _buff_size;
+    int _chip_latency;
+    
+    vector<Buffer *> _buffers;
+
+    int phy_x, phy_y;
+
+public:
+    ChipRouter(int _buff_size, vector<int> & phy_x, vector<int> & phy_y);
+};
+
 #endif
-
-

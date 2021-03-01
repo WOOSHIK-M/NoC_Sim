@@ -36,34 +36,6 @@ Router::Router(string const & topo, int _buff_size, vector<int> & _pack_lst, int
     // Make Inject Packet list
     vector<int> normal_packets = slice(_pack_lst, 0, normal - 1);
     vector<int> normal_packets_copy = normal_packets;
-    
-    // cerr << "\nBefore ::  ";
-    // for (int i=0;i<(int)normal_packets.size();i++) {
-    //     cerr << normal_packets[i] << " ";
-    // }
-    // cerr << endl;
-
-    // auto last_normal = unique(normal_packets.begin(), normal_packets.end());
-    // normal_packets.erase(last_normal, normal_packets.end());
-    // 
-    // cerr << "After ::  ";
-    // for (int i=0;i<(int)normal_packets.size();i++) {
-    //     cerr << normal_packets[i] << " ";
-    // }
-    // cerr << endl;
-    // 
-    // int num_packets = 0;
-    // for (int i=0;i<(int)normal_packets.size();i++) {
-    //     if (normal_packets[i] != -1) {
-    //         _IsActive = true;
-
-    //         _inject_lst.emplace_back(normal_packets[i]);           // Destination
-
-    //         num_packets = count(normal_packets_copy.begin(), normal_packets_copy.end(), normal_packets[i]);
-    //         _inject_num += num_packets;
-    //         _inject_pack_lst.emplace_back(num_packets);            // Packet Numbers
-    //     }
-    // }
 
     vector<int> new_dst;
     vector<int> new_pack;
@@ -88,16 +60,6 @@ Router::Router(string const & topo, int _buff_size, vector<int> & _pack_lst, int
             break;
         }
     }
-
-    // cerr << "After DEST ::  ";
-    // for (int i=0;i<(int)new_dst.size();i++) {
-    //     cerr << new_dst[i] << " ";
-    // }
-    // cerr << "After PACKET ::  ";
-    // for (int i=0;i<(int)new_dst.size();i++) {
-    //     cerr << new_pack[i] << " ";
-    // }
-    // cerr << endl;
 
     int num_packets = 0;
     if ( !new_dst.empty() ) {

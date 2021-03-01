@@ -20,6 +20,9 @@ ConfigData::ConfigData()
 	AddStrField("init_place", "zigzag");
 	_int_map["buff_size"] = 2;
 	_int_map["chip_buff_size"] = 10;
+
+	_int_map["interchip_latency"] = 10;
+
 	_int_map["vir_chan"] = 1;
 	_int_map["interval"] = 0;
 }

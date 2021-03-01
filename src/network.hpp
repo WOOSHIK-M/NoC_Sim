@@ -21,12 +21,14 @@ private:
     int normal, mul;
 
     int x_dim, y_dim, X_DIM, Y_DIM;
-    int _nodes;
+    int _nodes, _nodesPerChip;
     int _num_buffer;
     int _buff_size;
 
     int _vir_chan, _interval;
     
+    int _chip_buff_size, _interchip_latency;
+
     string _topology;
     string _parseip;
     string _parserf;
@@ -36,7 +38,11 @@ private:
 
     vector<int> phy_x;
     vector<int> phy_y;
+    vector<int> phy_x_chip;
+    vector<int> phy_y_chip;
+
     vector<vector<int>> FindIndexMap;
+    vector<vector<int>> ChipFindIndexMap;
 
     vector<vector<int>> _net;
     vector<vector<bool>> _inuse;
@@ -54,7 +60,7 @@ public:
     
     void CoutState();
     
-    bool Virtual_Channle_Control(Router * router, Packet * pack);
+    bool Virtual_Channel_Control(Router * router, Packet * pack);
 
     bool Inject(Router * router, Packet * pack, bool is_use, int dir, int src_x, int src_);
     bool Step(Router * router, bool is_use, int curbuffpos, int curpid, int dir, int src_x, int src_y);
