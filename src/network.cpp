@@ -64,7 +64,9 @@ Network::Network(Configuration const * config, vector<vector<int>> & LUT)
         _routers[i] = new Router( _topology, _buff_size, s_lut, normal, mul, i, phy_x, phy_y);
         
         if ( _routers[i]->IsActive() ) {
-            // printf("ROUTER NUM: %i, PACKETNUM: %i\n", i, _routers[i]->GetInjectNum());
+
+            printf("ROUTER NUM: %i, PACKETNUM: %i\n", i, _routers[i]->GetInjectNum());
+
             _all_packets += _routers[i]->GetInjectNum();
         }
     }
