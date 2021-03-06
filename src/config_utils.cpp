@@ -50,7 +50,7 @@ void Configuration::Assign(string const & field, int value)
     if (match != _int_map.end()) {
         _int_map[field] = value;
     } else {
-        ParseError("Unknown string field: " + field);
+        ParseError("Unknown int field: " + field);
     }
 }
 
@@ -63,7 +63,7 @@ void Configuration::Assign(string const & field, double value)
     if (match != _float_map.end()) {
         _float_map[field] = value;
     } else {
-        ParseError("Unknown string field: " + field);
+        ParseError("Unknown float field: " + field);
     }
 }
 
@@ -163,10 +163,16 @@ void ParseArgs(Configuration * cf, string const & filepath)
             string value = line.substr(iter + 1, line.size() - iter - 1);
             
             // update params
-            if (value[typeflag] > 47 && value[typeflag] < 58) {     // ASCII Code (Int)
-                cf->Assign(key, stoi(value));
+            if (value[typeflag] > 47 && value[typeflag] < 58) {     // ASCII Code (Number)
+                string::iterator it;
+                string ptr(".");
+                if (value.find(ptr) == string::npos) {
+                    cf->Assign(key, stoi(value));           // int value
+                } else {
+                    cf->Assign(key, stof(value));           // float value
+                }
             } else {
-                cf->Assign(key, value);
+                cf->Assign(key, value);                     // string value
             }
         }
         rf.close();

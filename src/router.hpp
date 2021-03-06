@@ -17,7 +17,11 @@ class Router
 private:
     bool _IsActive = false;
 
+    int RouterIdx;
+    int ChipIdx;
+
     int _phy_x, _phy_y;
+    int _phy_x_chip, _phy_y_chip;
 
     int _num_buffer;
     int buff_size;
@@ -39,9 +43,12 @@ public:
     int _time = 0;
     int local_in_out = 0;
 
-    Router(string const & topo, int _buff_size, vector<int> & _pack_lst, int normal, int mul, int idx, vector<int> & phy_x, vector<int> & phy_y);
+    Router(string const & topo, int _buff_size, vector<int> & _pack_lst, int normal, int mul, int idx, vector<int> & phy_x, vector<int> & phy_y, vector<int> & phy_x_chip, vector<int> & phy_y_chip, vector<vector<int>> & ChipFindIndexMap);
 
     void CoutState();
+
+    int GetRouterIdx()      { return RouterIdx; };
+    int GetChipIdx()        { return ChipIdx; };
 
     bool IsActive()         { return _IsActive; };
 
@@ -96,13 +103,34 @@ class ChipRouter
 private:
     int _buff_size;
     int _chip_latency;
+
+    int _num_buffer;
     
-    vector<Buffer *> _buffers;
+    vector<ChipBuffer *> _buffers;
 
     int phy_x, phy_y;
 
 public:
-    ChipRouter(int _buff_size, vector<int> & phy_x, vector<int> & phy_y);
+    ChipRouter(string const & topo, int buff_size, int chip_latency);
+
+    int GetNumBuffer()      { return _num_buffer; };
+
+    bool GetLeftIsFull()    { return _buffers[leftpos]->GetIsFull(); };
+    bool GetRightIsFull()   { return _buffers[rightpos]->GetIsFull(); };
+    bool GetUpIsFull()      { return _buffers[uppos]->GetIsFull(); };
+    bool GetDownIsFull()    { return _buffers[downpos]->GetIsFull(); };
+
+    bool GetLeftIsEmpty()    { return _buffers[leftpos]->GetIsEmpty(); };
+    bool GetRightIsEmpty()   { return _buffers[rightpos]->GetIsEmpty(); };
+    bool GetUpIsEmpty()      { return _buffers[uppos]->GetIsEmpty(); };
+    bool GetDownIsEmpty()    { return _buffers[downpos]->GetIsEmpty(); };
+
+    Packet * GetPacketAddress(int bid) { return _buffers[bid]->_packets[0]; };
+
+    void AddPacket(Packet * pack, int bid);
+    void RemovePacket(int bid);
+
+    void Reset();
 };
 
 #endif

@@ -1,13 +1,12 @@
 #include "packet.hpp"
 
 
-Packet::Packet(bool move, int x, int y, int x_chip, int y_chip)
+Packet::Packet(bool move, int x, int y, int _cur_node)
 {   
     is_move = move;
 
     dst_x = x;
     dst_y = y;
 
-    dst_x_chip = x_chip;
-    dst_y_chip = y_chip;
+    last_node = _cur_node;
 }

@@ -44,4 +44,26 @@ public:
     auto GetDestCoor(int pid) { return tuple<int, int>(_packets[pid]->dst_x, _packets[pid]->dst_y); };
 };
 
+
+class ChipBuffer {
+
+private:
+    int _buff_size;
+
+    bool _buff_full = false, _buff_empty = true;
+
+public:
+    deque<Packet *> _packets;
+
+    int _num = 0;
+    int _num_out = 0;
+
+    ChipBuffer(int _buff_size);
+
+    bool GetIsEmpty()   { return _buff_empty; };
+    bool GetIsFull()    { return _buff_full; };
+
+    void UpdateState();
+};
+
 #endif

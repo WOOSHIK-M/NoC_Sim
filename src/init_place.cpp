@@ -53,7 +53,6 @@ void zigzag(vector<int> & phy_x, vector<int> & phy_y, vector<int> & x_chip, vect
             posX += 1;
             posy = 0;
         }
-        chipidx++;
         posY += 1;
         posX = 0;
     }

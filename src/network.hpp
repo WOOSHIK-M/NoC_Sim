@@ -21,7 +21,7 @@ private:
     int normal, mul;
 
     int x_dim, y_dim, X_DIM, Y_DIM;
-    int _nodes, _nodesPerChip;
+    int _nodes, _chips, _nodesPerChip;
     int _num_buffer;
     int _buff_size;
 
@@ -45,9 +45,13 @@ private:
     vector<vector<int>> ChipFindIndexMap;
 
     vector<vector<int>> _net;
+    vector<vector<int>> _chip_net;
+
     vector<vector<bool>> _inuse;
+    vector<vector<bool>> _chip_inuse;
 
     vector<Router *> _routers;
+    vector<ChipRouter *> _chip_routers;
 
     enum{ buffer_empty=-1, buffer_exist, buffer_full };
     
@@ -63,7 +67,7 @@ public:
     bool Virtual_Channel_Control(Router * router, Packet * pack);
 
     bool Inject(Router * router, Packet * pack, bool is_use, int dir, int src_x, int src_);
-    bool Step(Router * router, bool is_use, int curbuffpos, int curpid, int dir, int src_x, int src_y);
+    bool Step(Router * router, ChipRouter * chiprouter, bool from_core, bool is_inject, int curbuffpos, int curpid, int dir, int cid, int rid, int src_x, int src_y, int dst_x, int dst_y);
 
     void Simulate();
     // void init_Networ();          //router, buffer 묶기

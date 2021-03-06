@@ -16,11 +16,18 @@ std::vector<T> slice(std::vector<T> const &v, int m, int n)
 }
 
 
-Router::Router(string const & topo, int _buff_size, vector<int> & _pack_lst, int normal, int mul, int idx, vector<int> & phy_x, vector<int> & phy_y)
+Router::Router(string const & topo, int _buff_size, vector<int> & _pack_lst, int normal, int mul, int idx, vector<int> & phy_x, vector<int> & phy_y, vector<int> & phy_x_chip, vector<int> & phy_y_chip, vector<vector<int>> & ChipFindIndexMap)
 {   
     // Allocate Position
     _phy_x = phy_x[idx];
     _phy_y = phy_y[idx];
+    _phy_x_chip = phy_x_chip[idx];
+    _phy_y_chip = phy_y_chip[idx];
+
+    RouterIdx = idx;
+    ChipIdx = ChipFindIndexMap[_phy_y_chip][_phy_x_chip];
+
+    // printf("ChipID: %i, RouterID: %i\n", ChipIdx, RouterIdx);
 
     // Make Buffers
     if (topo == "mesh") {
@@ -147,12 +154,15 @@ void Router::AddPacket(Packet * pack, int bid)
 
     pack->is_move = true;
     pack->buff_pos = bid;
+    pack->last_node = RouterIdx;
+
     buffer->_packets.emplace_back(pack);
     buffer->_num++;
 
     if (buffer->_packets.size() > buff_size) {
-        // printf("PACKINFO: (move) = (%i) .. (dx, dy) = (%i, %i) // BUFFER ID: %i \n", (int)pack->is_move, pack->dst_x, pack->dst_y, bid);
-        printf("Invalid Routing Process ... abort ... \n");
+        printf("BUFF_SIZE: %i / %i ...\n", (int)buffer->_packets.size(), buff_size);
+        printf("PACKINFO: (move) = (%i) .. (dx, dy) = (%i, %i) // BUFFER ID: %i \n", (int)pack->is_move, pack->dst_x, pack->dst_y, bid);
+        printf("(CORE) Invalid Routing Process ... abort ... \n");
         exit(-1);
     }
 }
@@ -184,5 +194,62 @@ void Router::PrintState()
 {
     for (int i=0;i<(int)_buffers.size();i++) {
         printf("Buffer: %i ( size: %i)\n", i, (int)_buffers[i]->_packets.size());
+    }
+}
+
+
+// ==========================================
+// ============= CHIP ROUTER ================
+// ==========================================
+ChipRouter::ChipRouter(string const & topo, int buff_size, int chip_latency)
+{
+    _buff_size = buff_size;
+    _chip_latency = chip_latency;
+    
+    // Make Buffers
+    if (topo == "mesh") {
+        _num_buffer = 5;             // left, right, up, down, local
+    }
+
+    _buffers.resize(_num_buffer);
+    for (int i=0;i<_num_buffer;i++) {
+        _buffers[i] = new ChipBuffer(_buff_size);
+    }
+}
+
+
+void ChipRouter::AddPacket(Packet * pack, int bid)
+{
+    ChipBuffer * buffer = _buffers[bid];
+
+    pack->is_move = true;
+    pack->buff_pos = bid;
+
+    buffer->_packets.emplace_back(pack);
+    buffer->_num++;
+
+    if (buffer->_packets.size() > _buff_size) {
+        // printf("PACKINFO: (move) = (%i) .. (dx, dy) = (%i, %i) // BUFFER ID: %i \n", (int)pack->is_move, pack->dst_x, pack->dst_y, bid);
+        printf("(CHIP) Invalid Routing Process ... abort ... \n");
+        exit(-1);
+    }
+}
+
+
+void ChipRouter::RemovePacket(int bid)
+{   
+    ChipBuffer * buffer = _buffers[bid];
+    
+    buffer->_num--;
+    buffer->_num_out++;
+
+    buffer->_packets.pop_front();
+}
+
+
+void ChipRouter::Reset()
+{
+    for (int i=0;i<(int)_buffers.size();i++) {
+        _buffers[i]->UpdateState();
     }
 }

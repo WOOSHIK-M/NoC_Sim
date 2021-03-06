@@ -53,3 +53,30 @@ void Buffer::UpdateState()
         _buff_empty = false;
     }
 }
+
+
+ChipBuffer::ChipBuffer(int _buf_size)
+{
+    _buff_size = _buf_size;
+}
+
+
+void ChipBuffer::UpdateState()
+{
+    _num_out = 0;
+    
+    for (int i=0;i<(int)_packets.size();i++) {
+        _packets[i]->is_move = false;
+    }
+
+    if (_packets.size() == _buff_size) {
+        _buff_full = true;
+        _buff_empty = false;
+    } else if (_packets.empty()) {
+        _buff_full = false;
+        _buff_empty = true;
+    } else {
+        _buff_full = false;
+        _buff_empty = false;
+    }
+}

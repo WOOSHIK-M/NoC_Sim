@@ -25,4 +25,8 @@ ConfigData::ConfigData()
 
 	_int_map["vir_chan"] = 1;
 	_int_map["interval"] = 0;
+
+	// ======== Power Options =======
+	_float_map["inner_power_coef"] = 1;		// inner-chip routing
+	_float_map["inter_power_coef"] = 1;		// inter-chip routing
 }
