@@ -53,6 +53,8 @@ private:
     vector<Router *> _routers;
     vector<ChipRouter *> _chip_routers;
 
+    double _inner_chip_coef, _inter_chip_coef;
+
     enum{ buffer_empty=-1, buffer_exist, buffer_full };
     
     int _all_packets = 0;

@@ -40,7 +40,7 @@ int main()
 
     routing_end = chrono::system_clock::now();
 	auto pass = chrono::duration_cast<chrono::milliseconds>(routing_end - routing_start).count();
-	cout<<"Routing Finished in "<< pass <<" ms."<<endl;
+	cout<<"Simlation Finished in "<< pass <<" ms."<<endl;
 
     return 0;
 }

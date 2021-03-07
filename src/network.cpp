@@ -30,6 +30,9 @@ Network::Network(Configuration const * config, vector<vector<int>> & LUT)
     _vir_chan = config->GetInt("vir_chan");
     _interval = config->GetInt("interval");
 
+    _inner_chip_coef = config->GetFloat("inner_power_coef");
+    _inter_chip_coef = config->GetFloat("inter_power_coef");
+
     _nodes = x_dim * y_dim * X_DIM * Y_DIM;
     _chips = X_DIM * Y_DIM;
     _nodesPerChip = x_dim * y_dim;
@@ -212,6 +215,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 			            TransPacket = true;
 			            ntbuffpos = rightpos;
                         _inuse[rid][dir] = true;
+                        _net[rid][ntrid]++;
 
 			            if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -231,6 +235,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 						TransPacket = true;
 						ntbuffpos = rightpos;
                         _chip_inuse[cid][dir] = true;
+                        _chip_net[cid][ntchipid]++;
 
 						if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -255,6 +260,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 			            TransPacket = true;
 			            ntbuffpos = leftpos;
                         _inuse[rid][dir] = true;
+                        _net[rid][ntrid]++;
 
 			            if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -276,6 +282,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 						TransPacket = true;
 						ntbuffpos = leftpos;
                         _chip_inuse[cid][dir] = true;
+                        _chip_net[cid][ntchipid]++;
 
 						if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -300,6 +307,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 			            TransPacket = true;
 			            ntbuffpos = downpos;
                         _inuse[rid][dir] = true;
+                        _net[rid][ntrid]++;
 
 			            if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -319,6 +327,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 						TransPacket = true;
 						ntbuffpos = downpos;
                         _chip_inuse[cid][dir] = true;
+                        _chip_net[cid][ntchipid]++;
 
 						if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -343,6 +352,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 			            TransPacket = true;
 			            ntbuffpos = uppos;
                         _inuse[rid][dir] = true;
+                        _net[rid][ntrid]++;
 
 			            if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -362,6 +372,7 @@ bool Network::Step(Router * router, ChipRouter * chiprouter, bool from_core, boo
 						TransPacket = true;
 						ntbuffpos = uppos;
                         _chip_inuse[cid][dir] = true;
+                        _chip_net[cid][ntchipid]++;
 
 						if ( !is_inject ) {
                             pack = router->RemovePacket(curbuffpos, curpid);
@@ -486,7 +497,7 @@ void Network::Simulate()
         for_each(_inuse.begin(), _inuse.end(), [](vector<bool>& v){fill(v.begin(), v.end(), false);}); // Initialize <<_inuse>> Matrix
         for_each(_chip_inuse.begin(), _chip_inuse.end(), [](vector<bool>& v){fill(v.begin(), v.end(), false);}); // Initialize <<_inuse>> Matrix
 
-        if ( total_cycle % 500 == 0 ) { printf("Running ... ( %i / %i )\n", cur_inject_num, _all_packets); }
+        if ( total_cycle % 500 == 0 ) { printf("Running ... ( CYCLES: %i \t PACKETS RECIEVED : %i / %i )\n", total_cycle, cur_inject_num, _all_packets); }
 
         bool busy = false;
 
@@ -735,6 +746,44 @@ void Network::Simulate()
         
         if ( cur_inject_num == _all_packets ) {
             printf("Routing done ... (cycles: %i) \n", total_cycle);
+
+            // Calculate Power Consumption
+            cerr << endl<< setw(50) << setfill('#') << " " << endl;
+            cerr << "=> SIMULATION RESULT !! " << endl;
+            cerr << setw(50) << setfill('#') << " " << endl;
+
+            printf("\nLatency (cycles) : %i\n", total_cycle);
+            double inner_comm = 0.;
+            int inner_cong = 0;
+            for (int i=0; i<(int)_net.size(); i++) {
+                for (int j=0; j<(int)_net[i].size(); j++) {
+                    inner_comm += (double)_net[i][j];
+                    if (inner_cong < _net[i][j]) {
+                        inner_cong = _net[i][j];
+                    }
+                }
+            }
+            
+            double inter_comm = 0.;
+            int inter_cong = 0;
+            for (int i=0; i<(int)_chip_net.size(); i++) {
+                for (int j=0; j<(int)_chip_net[i].size(); j++) {
+                    inter_comm += (double)_chip_net[i][j];
+                    if (inter_cong < _chip_net[i][j]) {
+                        inter_cong = _chip_net[i][j];
+                    }
+                }
+            }
+            printf("Power Consumption : %.2f\n", inner_comm * _inner_chip_coef + inter_comm * _inter_chip_coef);
+
+            printf("\nCommnication Cost (Inner-Chip) : %.2f\n", inner_comm);
+            printf("Commnication Cost (Inter-Chip) : %.2f\n", inter_comm);
+
+            printf("\nMax Bandwidth Req (Inner-Chip) : %i\n", inner_cong);
+            printf("Max Bandwidth Req (Inter-Chip) : %i\n", inter_cong);
+
+            printf("\n");
+
             break;
         } else if ( cur_inject_num < _all_packets && !busy ) {
             printf("Deadlock ... Aborting routing ... (cycles: %i)\n", total_cycle);
