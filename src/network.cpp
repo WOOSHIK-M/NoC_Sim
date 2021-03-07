@@ -752,7 +752,7 @@ void Network::Simulate()
             cerr << "=> SIMULATION RESULT !! " << endl;
             cerr << setw(50) << setfill('#') << " " << endl;
 
-            printf("\nLatency (cycles) : %i\n", total_cycle);
+            printf("\nLatency ( cycles ) : %i\n", total_cycle);
             double inner_comm = 0.;
             int inner_cong = 0;
             for (int i=0; i<(int)_net.size(); i++) {
@@ -774,13 +774,13 @@ void Network::Simulate()
                     }
                 }
             }
-            printf("Power Consumption : %.2f\n", inner_comm * _inner_chip_coef + inter_comm * _inter_chip_coef);
+            printf("Power Consumption ( mW ) : %.2f\n", (inner_comm * _inner_chip_coef + inter_comm * _inter_chip_coef) / 1000.0);
 
-            printf("\nCommnication Cost (Inner-Chip) : %.2f\n", inner_comm);
-            printf("Commnication Cost (Inter-Chip) : %.2f\n", inter_comm);
+            printf("\nCommnication Cost ( Inner-Chip ) : %.2f\n", inner_comm);
+            printf("Commnication Cost ( Inter-Chip ) : %.2f\n", inter_comm);
 
-            printf("\nMax Bandwidth Req (Inner-Chip) : %i\n", inner_cong);
-            printf("Max Bandwidth Req (Inter-Chip) : %i\n", inter_cong);
+            printf("\nMax Bandwidth Req ( Inner-Chip ) : %i\n", inner_cong);
+            printf("Max Bandwidth Req ( Inter-Chip ) : %i\n", inter_cong);
 
             printf("\n");
 
